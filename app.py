@@ -26,6 +26,16 @@ def generate_qr_code():
     version = data.get('version', 1)
     error_correction = data.get('error_correction', 'M')
 
+    # Set defaults
+    if version == None:
+        version = 1
+    if box_size == None:
+        box_size = 10
+    if border == None:
+        border = 4
+    if error_correction == None:
+        error_correction = "M"
+
     qr = qrcode.QRCode(
         version=version,
         box_size=box_size,
