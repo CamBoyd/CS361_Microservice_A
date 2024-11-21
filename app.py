@@ -5,6 +5,11 @@ import qrcode
 from qrcode.constants import ERROR_CORRECT_L, ERROR_CORRECT_M, ERROR_CORRECT_Q, ERROR_CORRECT_H
 import io
 
+DEFAULT_BOX_SIZE = 10
+DEFAULT_BORDER = 4
+DEFAULT_VERSION = 1
+DEFAULT_ERRORCORRECTION = 'M'
+
 app = Flask(__name__)
 
 ERROR_CORRECTION = {
@@ -20,21 +25,13 @@ ERROR_CORRECTION = {
 def generate_qr_code():
     data = request.json
 
+    # check item is defined in request or defined as none, if so use default value
     url = data.get('url')
-    box_size = data.get('box_size', 10)
-    border = data.get('border', 4)
-    version = data.get('version', 1)
-    error_correction = data.get('error_correction', 'M')
+    box_size = data.get('box_size') or DEFAULT_BOX_SIZE
+    border = data.get('border') or DEFAULT_BORDER
+    version = data.get('version', 1) or DEFAULT_VERSION
+    error_correction = data.get('error_correction') or DEFAULT_ERRORCORRECTION
 
-    # Set defaults
-    if version == None:
-        version = 1
-    if box_size == None:
-        box_size = 10
-    if border == None:
-        border = 4
-    if error_correction == None:
-        error_correction = "M"
 
     qr = qrcode.QRCode(
         version=version,
@@ -46,18 +43,20 @@ def generate_qr_code():
     qr.make(fit=True)
 
     # Create a QR code image
-    img = qr.make_image(fill="black", back_color="white")
-    
+    qr_image = qr.make_image(fill="black", back_color="white")
+
     # Save the QR code image to a buffer
-    buffer = io.BytesIO()
-    img.save(buffer, format='PNG')
-    buffer.seek(0)
-    
+    image_buffer = io.BytesIO()
+    qr_image.save(image_buffer, format="PNG")
+    image_buffer.seek(0)
+
     # Create the response object
-    response = make_response(buffer.getvalue())
-    response.headers['Content-Disposition'] = 'attachment; filename=QRCode.png'
-    response.mimetype = 'image/png'
+    filename = "QRCode.png"
+    response = make_response(image_buffer.getvalue())
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    response.mimetype = "image/png"
     return response
+
 
 # Listener
 
